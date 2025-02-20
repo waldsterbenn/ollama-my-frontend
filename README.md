@@ -1,14 +1,14 @@
-# Simple Vue 3 Chat App
+# Simple OLLAMA 3 Chat App
 
-This is a lightweight chat application built with Vue 3, TypeScript, Vite, Bootstrap 5. The app allows users to chat with a bot via a backend call to OLLAMA.
+This is a lightweight chat application built with Vue 3, TypeScript, Vite, Bootstrap 5. The app allows users to chat with a bot via a backend call to locally hosted models by [OLLAMA](https://ollama.com/).
 
 # Interface
 
 Select model and start chatting.
-![SC0](../Screenshot0.png)
+![SC0](Screenshot0.png)
 
 View and copy :clipboard: responses. If it's a thinking model, click the robot :robot: to view it's thoughts.
-![SC1](../Screenshot1.png)
+![SC1](Screenshot1.png)
 
 ## Project Structure
 
