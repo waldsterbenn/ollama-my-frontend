@@ -1,7 +1,8 @@
 <template>
   <div id="app" class="container">
-    <div v-if="errorMessage" class="alert alert-danger alert-dismissible mt-2">
+    <div v-if="errorMessage" class="alert alert-danger alert-dismissible mt-2" role="alert">
       {{ errorMessage }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <!-- Dropdown to select modelId -->
     <div class="container-fluid d-flex flex-row h-100 mb-2">
@@ -37,7 +38,7 @@ onMounted(async () => {
       selectedModel.value = list[0].model;
     }
   } catch (error) {
-    errorMessage.value = (error as Error).cause as string ?? (error as Error).message;
+    errorMessage.value = "Unable to fetch models from OLLAMA: " + ((error as Error).cause as string ?? (error as Error).message);
   }
 });
 

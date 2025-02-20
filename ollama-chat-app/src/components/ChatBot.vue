@@ -40,8 +40,9 @@
         </div>
       </div>
       <!-- Display error message if any -->
-      <div v-if="errorMessage" class="alert alert-danger alert-dismissible mt-2">
+      <div v-if="errorMessage" class="alert alert-danger alert-dismissible mt-2" role="alert">
         {{ errorMessage }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       <div class="input-area d-flex p-2 bg-light">
         <input ref="userInputField" v-model="userInput" @keyup.enter="sendMessage" class="form-control me-2"
