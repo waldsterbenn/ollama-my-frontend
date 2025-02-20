@@ -37,6 +37,10 @@
         <div ref="bottomElement"></div>
         <div v-if="isLoading" class="loading-indicator text-center text-muted">
           Thinking...
+          <div class="alert alert-primary alert-dismissible mt-2" role="alert">
+            Token count: {{ totalTokenCount }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
         </div>
       </div>
       <!-- Display error message if any -->
@@ -44,6 +48,7 @@
         Failed during api call: {{ errorMessage }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
+
       <div class="input-area d-flex p-2 bg-light">
         <input ref="userInputField" v-model="userInput" @keyup.enter="sendMessage" class="form-control me-2"
           placeholder="Type your message..." />
@@ -98,6 +103,7 @@ const errorMessage = ref("");
 const userInput = ref('');
 const chatMessages = ref<Message[]>([{ content: `I'm your expert chatbot. How can I help you today?`, role: "system" }]);
 const isLoading = ref(false);
+const totalTokenCount = ref(0);
 const messagesContainer = ref<HTMLElement | null>(null);
 const bottomElement = ref<HTMLElement | null>(null);
 const userInputField = ref<HTMLInputElement | null>(null);
@@ -121,8 +127,10 @@ const sendMessage = async () => {
   errorMessage.value = "";
   chatMessages.value.push({ content: userInput.value, role: "user" });
   isLoading.value = true;
+
+  totalTokenCount.value = chatMessages.value.reduce((acc: number, message: Message) => acc + estimateTokenCount(message.content), 500);
   try {
-    const responseMessage: Message = await sendMessageToBot(chatMessages.value, props.modelId);
+    const responseMessage: Message = await sendMessageToBot(chatMessages.value, props.modelId, totalTokenCount.value);
     chatMessages.value.push(responseMessage);
   } catch (error) {
     console.error("Send message error:", error);
@@ -133,6 +141,16 @@ const sendMessage = async () => {
   userInput.value = '';
 };
 
+function estimateTokenCount(str: string): number {
+  // Remove any leading/trailing whitespace
+  str = str.trim();
+
+  // Split the string into an array of words
+  const words = str.split(/\s+/);
+
+  // Return the length of the words array as the estimated token count
+  return words.length;
+}
 </script>
 
 <style scoped>

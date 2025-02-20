@@ -11,3 +11,5 @@ yarn dev
 
 # Open the browser at the specified URL
 Start-Process "http://localhost:3000/index.html"
+
+Read-Host -Prompt "Press Enter to exit"

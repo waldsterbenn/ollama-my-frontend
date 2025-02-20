@@ -4,13 +4,14 @@ const API_URL = "http://localhost:11434/";
 
 export const sendMessageToBot = async (
   history: Message[],
-  modelId: string
+  modelId: string,
+  tokenEstimate: number
 ): Promise<Message> => {
   try {
     const ollama = new Ollama({ host: "http://127.0.0.1:11434" });
     const response: ChatResponse = await ollama.chat({
       model: modelId,
-
+      options: tokenEstimate > 2048 ? { num_ctx: tokenEstimate } : {},
       messages: history,
     });
     return response.message;
