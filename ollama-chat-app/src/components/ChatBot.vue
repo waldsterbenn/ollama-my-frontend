@@ -19,7 +19,7 @@
                 <i class="bi bi-clipboard-plus"></i>
               </button>
             </div>
-            
+
             <!-- Render thought toggle button with tooltip -->
             <div v-if="message.role === 'assistant' && renderThinkSection(message.content)">
               <button class="btn btn-subtle" type="button" :data-bs-target="`#collapseThought-${index}`"
@@ -51,9 +51,10 @@
       </div>
 
       <div class="input-area d-flex p-2 bg-light">
-        <input ref="userInputField" v-model="userInput" @keyup.enter="sendMessage" class="form-control me-2"
-          placeholder="Type your message..." />
-        <button @click="sendMessage" class="btn btn-primary" :disabled="isLoading || !userInput">Send</button>
+        <textarea style="height: 4em" wrap="hard" ref="userInputField" v-model="userInput" @keyup.enter="sendMessage"
+          class="form-control me-2" placeholder="Type your message...">
+        </textarea>
+        <button @click="sendMessage" class="btn btn-primary" :disabled="isLoading || !userInput">Go</button>
       </div>
     </div>
   </div>
@@ -90,7 +91,6 @@ const renderMainContent = (text: string) => {
 async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
-    alert("Copied to clipboard");
   } catch (error) {
     alert("Failed to copy: " + error);
   }
