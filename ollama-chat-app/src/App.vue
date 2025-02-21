@@ -1,54 +1,42 @@
 <template>
   <div id="app" class="container">
-    <div v-if="errorMessage" class="alert alert-danger alert-dismissible mt-2" role="alert">
-      {{ errorMessage }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <!-- Dropdown to select modelId -->
-    <div class="container-fluid d-flex flex-row h-100 mb-2">
-      <label for="modelSelect" class="form-label"></label>
-      <select id="modelSelect" v-model="selectedModel" class="form-select">
-        <option v-for="model in models" :key="model.model" :value="model.model">
-          {{ model.name }}
-        </option>
-      </select>
-
-    </div>
-
-    <ChatBot :modelId="selectedModel" />
+    <nav class="navbar navbar-expand bg-light mb-2">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Local Chat</a>
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <router-link to="/" class="nav-link">Chat Bot</router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/ctxcal" class="nav-link">CTX Calculator</router-link>
+            </li>
+          </ul>
+          <!-- Embedded component -->
+          <div class="d-flex align-items-center">
+            <LlmSelector />
+          </div>
+        </div>
+      </div>
+    </nav>
+    <router-view></router-view>
   </div>
 </template>
 
-<script setup lang="ts">
-import type { ModelResponse } from 'ollama';
-import { onMounted, ref } from 'vue';
-import ChatBot from './components/ChatBot.vue';
-import { getListOfModels } from './services/ollamaApi';
+<script lang="ts">
+import { defineComponent } from 'vue';
+import LlmSelector from './components/LlmSelector.vue';
 
-
-const selectedModel = ref("deepseek-r1:7b");
-const models = ref<ModelResponse[]>([]);
-const errorMessage = ref("");
-
-onMounted(async () => {
-  try {
-    const list = await getListOfModels();
-    models.value = list;
-    if (list.length && !list.find(m => m.model === selectedModel.value)) {
-      selectedModel.value = list[0].model;
-    }
-  } catch (error) {
-    errorMessage.value = "Unable to fetch models from OLLAMA: " + ((error as Error).cause as string ?? (error as Error).message);
-  }
-});
-
+export default defineComponent({
+  name: 'App',
+  components: { LlmSelector }
+})
 </script>
 
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 1rem;
 }
 </style>

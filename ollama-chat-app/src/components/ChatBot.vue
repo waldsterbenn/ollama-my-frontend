@@ -19,6 +19,7 @@
                 <i class="bi bi-clipboard-plus"></i>
               </button>
             </div>
+            
             <!-- Render thought toggle button with tooltip -->
             <div v-if="message.role === 'assistant' && renderThinkSection(message.content)">
               <button class="btn btn-subtle" type="button" :data-bs-target="`#collapseThought-${index}`"
@@ -86,7 +87,6 @@ const renderMainContent = (text: string) => {
   return `<div class="text-start">${md.render(remainingText)}</div>`;
 };
 
-// Update copyToClipboard to accept text parameter.
 async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
@@ -96,10 +96,8 @@ async function copyToClipboard(text: string) {
   }
 }
 
-// New error message ref:
 const errorMessage = ref("");
 
-// Existing reactive variables
 const userInput = ref('');
 const chatMessages = ref<Message[]>([{ content: `I'm your expert chatbot. How can I help you today?`, role: "system" }]);
 const isLoading = ref(false);
@@ -123,7 +121,6 @@ watch(chatMessages, () => {
 
 const sendMessage = async () => {
   if (userInput.value.trim() === '') return;
-  // Clear previous error.
   errorMessage.value = "";
   chatMessages.value.push({ content: userInput.value, role: "user" });
   isLoading.value = true;
