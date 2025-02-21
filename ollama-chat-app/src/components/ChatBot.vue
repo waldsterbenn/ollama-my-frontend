@@ -63,10 +63,11 @@
 <script setup lang="ts">
 import MarkdownIt from 'markdown-it';
 import { Message } from 'ollama';
-import { defineProps, nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import { sendMessageToBot } from '../services/ollamaApi';
+import { useChatAppStore } from '../stores/app_store';
 
-const props = defineProps<{ modelId: string }>();
+const appStore = useChatAppStore();
 
 const md = new MarkdownIt();
 
@@ -119,7 +120,8 @@ watch(chatMessages, () => {
   });
 }, { deep: true });
 
-const sendMessage = async () => {
+const sendMessage = async (e: Event) => {
+  if (e.type === 'keyup' && (e as KeyboardEvent).key === 'Enter' && (e as KeyboardEvent).shiftKey === true) return;
   if (userInput.value.trim() === '') return;
   errorMessage.value = "";
   chatMessages.value.push({ content: userInput.value, role: "user" });
@@ -127,7 +129,7 @@ const sendMessage = async () => {
 
   totalTokenCount.value = chatMessages.value.reduce((acc: number, message: Message) => acc + estimateTokenCount(message.content), 500);
   try {
-    const responseMessage: Message = await sendMessageToBot(chatMessages.value, props.modelId, totalTokenCount.value);
+    const responseMessage: Message = await sendMessageToBot(chatMessages.value, appStore.modelId, totalTokenCount.value);
     chatMessages.value.push(responseMessage);
   } catch (error) {
     console.error("Send message error:", error);
