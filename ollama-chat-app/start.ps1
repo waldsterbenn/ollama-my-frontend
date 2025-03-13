@@ -1,3 +1,6 @@
+# Start Ollama in new Windows Terminal tab
+wt -w 0 -p "Windows PowerShell" powershell -noExit -c "ollama serve"
+
 # see https://nodejs.org/en/download/package-manager
 
 # installs fnm (Fast Node Manager)

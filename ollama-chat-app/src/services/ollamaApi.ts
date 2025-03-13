@@ -7,7 +7,7 @@ import {
   ShowResponse,
 } from "ollama";
 
-const ollama_addr = "http://127.0.0.1:11434";
+const ollama_addr = `http://${window.location.hostname}:${11434}`;
 
 export const sendMessageToBot = async (
   history: Message[],

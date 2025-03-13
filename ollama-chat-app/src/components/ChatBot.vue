@@ -121,8 +121,15 @@ watch(chatMessages, () => {
 }, { deep: true });
 
 const sendMessage = async (e: Event) => {
-  if (e.type === 'keyup' && (e as KeyboardEvent).key === 'Enter' && (e as KeyboardEvent).shiftKey === true) return;
-  if (userInput.value.trim() === '') return;
+
+  if (e.type !== 'keyup')
+    return;
+  if (userInput.value.trim() === '')
+    return;
+  const keyboard = (e as KeyboardEvent);
+  if (e.type === 'keyup' && keyboard.key === 'Enter' && keyboard.ctrlKey !== true)
+    return;
+
   errorMessage.value = "";
   chatMessages.value.push({ content: userInput.value, role: "user" });
   isLoading.value = true;
