@@ -52,7 +52,7 @@ import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
 import { getListOfModels } from '../services/ollamaApi';
 import { useChatAppStore } from '../stores/app_store';
 const appStore = useChatAppStore();
-const selectedModel = ref("deepseek-r1:7b");
+const selectedModel = ref("gemma3:4b");
 const models = ref<ModelResponse[]>([]);
 const toastMessage = ref({ header: "", message: "" });
 
