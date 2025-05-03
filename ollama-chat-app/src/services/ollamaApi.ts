@@ -1,4 +1,5 @@
 import {
+  AbortableAsyncIterator,
   ChatResponse,
   Message,
   ModelResponse,
@@ -12,16 +13,23 @@ const ollama_addr = `http://${window.location.hostname}:${11434}`;
 export const sendMessageToBot = async (
   history: Message[],
   modelId: string,
-  tokenEstimate: number
-): Promise<Message> => {
+  tokenEstimate: number,
+  onMessage: (message: Message) => void,
+  onCancelHook: (cancelHook: AbortableAsyncIterator<ChatResponse>) => void
+): Promise<AbortableAsyncIterator<ChatResponse>> => {
   try {
     const ollama = new Ollama({ host: ollama_addr });
-    const response: ChatResponse = await ollama.chat({
+    const response: AbortableAsyncIterator<ChatResponse> = await ollama.chat({
       model: modelId,
       options: tokenEstimate > 2048 ? { num_ctx: tokenEstimate } : {},
       messages: history,
+      stream: true,
     });
-    return response.message;
+    onCancelHook(response);
+    for await (const part of response) {
+      onMessage(part.message);
+    }
+    return response;
   } catch (error) {
     console.error("Error sending message to bot:", error);
     throw new Error("Failed to communicate with the bot", { cause: error });

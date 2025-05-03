@@ -6,9 +6,10 @@
           :class="{ 'bg-light align-self-end': message.role === 'user', 'bg-info-subtle align-self-start': message.role === 'assistant' }">
 
           <!-- Render main content for assistant messages -->
-          <div v-if="message.role === 'assistant'" v-html="renderMainContent(message.content)"></div>
+          <div v-if="message.role === 'assistant'" v-html="renderMainContent(message.content)"
+            :class="isLoading ? 'bg-info' : ''"></div>
           <div v-else>
-            {{ message.content }}
+            <span class="text-start bg-info" v-html="md.render(message.content)"></span>
 
             <div v-if="message.images" class="d-flex flex-wrap">
               <img v-for="(image, i) in message.images" :key="i" :src="getImageURL(image as string)"
@@ -56,20 +57,37 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
 
-      <div class="input-area d-flex p-2 bg-light">
+      <div class="d-grid gap-2 d-md-flex p-2">
         <!-- <input type="file" accept="image/*" ref="imageInput" style="display:none" @change="handleImageUpload" /> -->
         <input type="file" accept="image/*" multiple ref="imageInput" style="display:none"
           @change="handleImageUpload" />
 
         <!-- Button to trigger image picker -->
-        <button @click="triggerImagePicker" class="btn btn-secondary me-2" title="Upload an image">
+        <button @click="triggerImagePicker" class="btn btn-secondary" title="Upload an image">
           <i class="bi bi-image"></i> Image
         </button>
 
-        <textarea style="height: 4em" wrap="hard" ref="userInputField" v-model="userInput" @keyup.enter="sendMessage"
-          class="form-control me-2" placeholder="Type your message...">
+        <textarea wrap="hard" ref="userInputField" v-model="userInput" @keyup.enter="sendMessage"
+          class="form-control mx-auto" placeholder="Type your message...">
         </textarea>
-        <button @click="sendMessage" class="btn btn-primary" :disabled="isLoading || !userInput">Go</button>
+
+        <div class="d-grid gap-2">
+          <button v-if="isLoading" @click="stopButton" class="btn btn-primary" :disabled="!isLoading" title="Ctrl+Enter"
+            type="button">
+            <span>
+              <i class="bi bi-stop"></i>
+            </span>
+          </button>
+          <button @click="sendMessage" class="btn btn-primary" :disabled="isLoading || !userInput" title="Ctrl+Enter"
+            type="submit">
+            <div v-if="isLoading" class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span v-else>
+              <i class="bi bi-send"></i>
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -77,7 +95,7 @@
 
 <script setup lang="ts">
 import MarkdownIt from 'markdown-it';
-import { Message } from 'ollama';
+import { AbortableAsyncIterator, ChatResponse, Message } from 'ollama';
 import { nextTick, ref, watch } from 'vue';
 import { sendMessageToBot } from '../services/ollamaApi';
 import { useChatAppStore } from '../stores/app_store';
@@ -127,11 +145,11 @@ const userInput = ref('');
 const chatMessages = ref<Message[]>([{ content: `I'm your expert chatbot. How can I help you today?`, role: "system", images: [] }]);
 const isLoading = ref(false);
 const totalTokenCount = ref(0);
+const chatHook = ref();
 const messagesContainer = ref<HTMLElement | null>(null);
 const bottomElement = ref<HTMLElement | null>(null);
 const userInputField = ref<HTMLInputElement | null>(null);
 const imageInput = ref<HTMLInputElement | null>(null);
-const uploadedImages = ref<Message[] | null>(null);
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -139,36 +157,50 @@ const scrollToBottom = () => {
   });
 };
 
-watch(chatMessages, () => {
+watch(isLoading, () => {
   scrollToBottom();
   nextTick(() => {
     userInputField.value?.focus();
   });
 }, { deep: true });
 
+const stopButton = async (e: Event) => {
+  if (chatHook.value) {
+    chatHook.value.abort();
+    chatHook.value = null;
+    isLoading.value = false;
+  }
+};
+
 const sendMessage = async (e: Event) => {
-
   if (userInput.value.trim() === '')
-    return;
-  const keyboard = (e as KeyboardEvent);
+    return; const keyboard = (e as KeyboardEvent);
   if (e.type === 'keyup' && keyboard.key === 'Enter' && keyboard.ctrlKey !== true)
-    return;
-
-  errorMessage.value = "";
-
+    return; errorMessage.value = "";
   chatMessages.value.push({ content: userInput.value, role: "user" } as Message);
   isLoading.value = true;
-
   totalTokenCount.value = chatMessages.value.reduce((acc: number, message: Message) => acc + estimateTokenCount(message.content), 500);
   try {
-    const responseMessage: Message = await sendMessageToBot(chatMessages.value, appStore.modelId, totalTokenCount.value);
+
     userInput.value = '';
-    chatMessages.value.push(responseMessage);
+    chatMessages.value.push({ content: "", role: "assistant" } as Message);
+    const onMessageFromBot = (message: Message) => {
+      chatMessages.value[chatMessages.value.length - 1].content += message.content;
+    };
+    const onCancelHook = (cancelHook: AbortableAsyncIterator<ChatResponse>) => {
+      chatHook.value = cancelHook;
+    };
+    chatHook.value = await sendMessageToBot(chatMessages.value, appStore.modelId, totalTokenCount.value,
+      onMessageFromBot,
+      onCancelHook
+    );
+
   } catch (error) {
     console.error("Send message error:", error);
     errorMessage.value = (error as Error).cause as string ?? (error as Error).message;
   } finally {
     isLoading.value = false;
+    chatHook.value = null;
   }
 };
 
